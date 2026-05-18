@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'">
+<title>Norton Eventos</title>
+<style>
+:root {
+    --bg-0: #04070d;
+    --bg-1: #07101e;
+    --bg-2: #0c1a30;
+    --line: rgba(120, 160, 220, 0.10);
+    --line-strong: rgba(120, 160, 220, 0.22);
+    --text: #e6edf7;
+    --text-dim: #93a4bd;
+    --text-mute: #5c6c87;
+    --cyan: #00e0ff;
+    --cyan-soft: rgba(0, 224, 255, 0.14);
+    --cyan-glow: rgba(0, 224, 255, 0.45);
+    --green: #2ee6a8;
+    --green-soft: rgba(46, 230, 168, 0.14);
+    --green-glow: rgba(46, 230, 168, 0.45);
+    --amber: #ffb547;
+    --amber-soft: rgba(255, 181, 71, 0.14);
+    --amber-glow: rgba(255, 181, 71, 0.40);
+    --red: #ff5e7a;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    background:
+        radial-gradient(ellipse at top right, rgba(0, 224, 255, 0.10), transparent 60%),
+        radial-gradient(ellipse at bottom left, rgba(46, 230, 168, 0.06), transparent 50%),
+        linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 100%);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+    font-size: 13px;
+    line-height: 1.4;
+    user-select: none;
+    overflow: hidden;
+    position: relative;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 3px,
+        rgba(120, 180, 255, 0.012) 3px,
+        rgba(120, 180, 255, 0.012) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ============ TITLE BAR ============ */
+.titlebar {
+    -webkit-app-region: drag;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6px 0 14px;
+    background: linear-gradient(180deg, rgba(8, 18, 36, 0.85), rgba(4, 10, 22, 0.7));
+    border-bottom: 1px solid var(--line-strong);
+    position: relative;
+    z-index: 10;
+}
+
+.titlebar::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 14px;
+    right: 14px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan) 30%, var(--cyan) 70%, transparent);
+    opacity: 0.4;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 2px;
+}
+
+.brand-logo {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    background: linear-gradient(135deg, #00e0ff 0%, #0099ff 100%);
+    box-shadow: 0 0 10px var(--cyan-glow), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 900;
+    color: #052033;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.brand-logo::before { content: 'M'; }
+
+.brand-text {
+    background: linear-gradient(90deg, #ffffff 0%, var(--cyan) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.brand-sub {
+    font-size: 9px;
+    color: var(--text-mute);
+    letter-spacing: 1.5px;
+    margin-left: 2px;
+    font-weight: 500;
+}
+
+.titlebar-actions {
+    -webkit-app-region: no-drag;
+    display: flex;
+    gap: 1px;
+}
+
+.tb-btn {
+    width: 32px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-radius: 5px;
+    transition: 0.15s;
+    font-size: 13px;
+    font-family: inherit;
+}
+
+.tb-btn svg { width: 14px; height: 14px; stroke-width: 2; }
+
+.tb-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+}
+
+.tb-btn.active {
+    color: var(--cyan);
+    background: var(--cyan-soft);
+    box-shadow: inset 0 0 0 1px rgba(0, 224, 255, 0.25);
+}
+
+.tb-btn.close:hover {
+    background: rgba(255, 94, 122, 0.18);
+    color: var(--red);
+}
+
+/* ============ CONTENT ============ */
+.content {
+    height: calc(100vh - 40px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 12px;
+    position: relative;
+    z-index: 2;
+}
+
+.content::-webkit-scrollbar { width: 6px; }
+.content::-webkit-scrollbar-track { background: transparent; }
+.content::-webkit-scrollbar-thumb {
+    background: rgba(120, 160, 220, 0.2);
+    border-radius: 3px;
+}
+.content::-webkit-scrollbar-thumb:hover { background: rgba(120, 160, 220, 0.4); }
+
+/* ============ STATUS BANNER ============ */
+.banner {
+    position: relative;
+    background:
+        linear-gradient(135deg, rgba(0, 224, 255, 0.06), rgba(46, 230, 168, 0.03)),
+        linear-gradient(180deg, rgba(15, 27, 50, 0.7), rgba(8, 16, 32, 0.6));
+    border: 1px solid var(--line-strong);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    backdrop-filter: blur(6px);
+}
+
+.banner::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    opacity: 0.5;
+}
+
+.banner-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.clock-block { display: flex; flex-direction: column; }
+
+.clock {
+    font-size: 30px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 1.5px;
+    line-height: 1;
+    background: linear-gradient(180deg, #ffffff, #b6d4ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.clock-date {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-top: 4px;
+}
+
+.server-block {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.server-label {
+    font-size: 9px;
+    color: var(--text-mute);
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+}
+
+.server-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--cyan);
+    letter-spacing: 1.5px;
+    text-shadow: 0 0 14px var(--cyan-glow);
+}
+
+.live-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green-glow);
+    margin-right: 6px;
+    animation: live 1.6s infinite;
+    vertical-align: middle;
+}
+
+@keyframes live {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.banner-next {
+    border-top: 1px solid var(--line);
+    padding-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.banner-next-left {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    flex: 1;
+}
+
+.banner-next-label {
+    font-size: 9px;
+    color: var(--text-mute);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.banner-next-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.banner-next-meta {
+    font-size: 11px;
+    color: var(--text-dim);
+}
+
+.banner-next-right {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.banner-countdown {
+    font-size: 22px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    color: var(--cyan);
+    text-shadow: 0 0 14px var(--cyan-glow);
+    letter-spacing: 0.5px;
+}
+
+.banner-countdown.soon {
+    color: var(--amber);
+    text-shadow: 0 0 14px var(--amber-glow);
+}
+
+.banner-countdown.active {
+    color: var(--green);
+    text-shadow: 0 0 14px var(--green-glow);
+    animation: liveBlink 1.2s ease-in-out infinite;
+}
+
+@keyframes liveBlink {
+    0%, 100% { opacity: 1; text-shadow: 0 0 14px var(--green-glow); }
+    50% { opacity: 0.55; text-shadow: 0 0 28px var(--green-glow); }
+}
+
+.banner-at {
+    font-size: 10px;
+    color: var(--text-mute);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+}
+
+/* ============ SETTINGS PANEL ============ */
+.settings {
+    background: linear-gradient(180deg, rgba(15, 27, 50, 0.6), rgba(8, 16, 32, 0.5));
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+    display: none;
+    animation: slideDown 0.2s ease;
+}
+
+.settings.open { display: block; }
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.settings-title {
+    font-size: 10px;
+    color: var(--text-mute);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.settings-title::before {
+    content: '';
+    width: 12px;
+    height: 1px;
+    background: var(--cyan);
+    opacity: 0.6;
+}
+
+.settings-group { margin-bottom: 10px; }
+.settings-group:last-child { margin-bottom: 0; }
+
+.toggle-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.chip {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 11px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    cursor: pointer;
+    font-size: 11px;
+    color: var(--text-dim);
+    transition: 0.18s;
+    font-weight: 500;
+}
+
+.chip:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+}
+
+.chip.on {
+    background: var(--cyan-soft);
+    border-color: rgba(0, 224, 255, 0.4);
+    color: var(--cyan);
+}
+
+.chip.danger.on {
+    background: rgba(255, 94, 122, 0.12);
+    border-color: rgba(255, 94, 122, 0.4);
+    color: var(--red);
+}
+
+.chip .led {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--text-mute);
+    transition: 0.18s;
+}
+
+.chip.on .led {
+    background: var(--cyan);
+    box-shadow: 0 0 7px var(--cyan);
+}
+
+.chip.danger.on .led {
+    background: var(--red);
+    box-shadow: 0 0 7px var(--red);
+}
+
+/* ============ TABS ============ */
+.tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+    background: rgba(8, 16, 32, 0.5);
+    padding: 4px;
+    border-radius: 11px;
+    border: 1px solid var(--line);
+}
+
+.tab {
+    flex: 1;
+    text-align: center;
+    padding: 9px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    transition: 0.18s;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    position: relative;
+}
+
+.tab:hover {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.tab.active {
+    background: linear-gradient(135deg, rgba(0, 224, 255, 0.16), rgba(0, 153, 255, 0.08));
+    color: var(--cyan);
+    box-shadow:
+        inset 0 0 0 1px rgba(0, 224, 255, 0.3),
+        0 4px 14px rgba(0, 224, 255, 0.12);
+    text-shadow: 0 0 10px var(--cyan-glow);
+}
+
+.tab-count {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 10px;
+    padding: 1px 7px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    color: var(--text-mute);
+    font-weight: 700;
+}
+
+.tab.active .tab-count {
+    background: rgba(0, 224, 255, 0.18);
+    color: var(--cyan);
+}
+
+/* ============ CARDS ============ */
+#cards { display: flex; flex-direction: column; }
+
+.card {
+    background: linear-gradient(180deg, rgba(15, 26, 48, 0.72), rgba(8, 14, 28, 0.72));
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 13px 13px 12px;
+    margin-bottom: 10px;
+    transition: 0.25s;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(4px);
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--line-strong);
+    transition: 0.25s;
+}
+
+.card:hover {
+    border-color: rgba(120, 160, 220, 0.3);
+    transform: translateY(-1px);
+}
+
+/* Category tinting — only in unified "Tudo" view, only when status is "wait" */
+body.show-badges .card.kind-invasao:not(.soon):not(.active) {
+    background:
+        linear-gradient(90deg, rgba(255, 94, 122, 0.10), transparent 45%),
+        linear-gradient(180deg, rgba(28, 14, 22, 0.72), rgba(14, 8, 14, 0.72));
+    border-color: rgba(255, 94, 122, 0.22);
+}
+
+body.show-badges .card.kind-invasao:not(.soon):not(.active)::before {
+    background: linear-gradient(180deg, #ff5e7a, #c93e5c);
+    box-shadow: 0 0 12px rgba(255, 94, 122, 0.40);
+}
+
+body.show-badges .card.kind-evento:not(.soon):not(.active) {
+    background:
+        linear-gradient(90deg, rgba(0, 153, 255, 0.10), transparent 45%),
+        linear-gradient(180deg, rgba(12, 22, 38, 0.72), rgba(8, 14, 28, 0.72));
+    border-color: rgba(0, 153, 255, 0.25);
+}
+
+body.show-badges .card.kind-evento:not(.soon):not(.active)::before {
+    background: linear-gradient(180deg, #4ab8ff, #1565c9);
+    box-shadow: 0 0 12px rgba(0, 153, 255, 0.40);
+}
+
+/* Make countdown number echo category color in unified view */
+body.show-badges .card.kind-invasao:not(.soon):not(.active) .countdown {
+    color: #ff9bb2;
+    text-shadow: 0 0 14px rgba(255, 94, 122, 0.35);
+}
+
+body.show-badges .card.kind-evento:not(.soon):not(.active) .countdown {
+    color: #9bd6ff;
+    text-shadow: 0 0 14px rgba(0, 153, 255, 0.35);
+}
+
+body.show-badges .card.kind-invasao:not(.soon):not(.active) .progress-bar {
+    background: linear-gradient(90deg, rgba(255, 94, 122, 0.3), #ff5e7a);
+    box-shadow: 0 0 10px rgba(255, 94, 122, 0.45);
+}
+
+body.show-badges .card.kind-evento:not(.soon):not(.active) .progress-bar {
+    background: linear-gradient(90deg, rgba(0, 153, 255, 0.3), #4ab8ff);
+    box-shadow: 0 0 10px rgba(0, 153, 255, 0.45);
+}
+
+.card.soon {
+    border-color: rgba(255, 181, 71, 0.32);
+    background: linear-gradient(180deg, rgba(40, 28, 14, 0.55), rgba(20, 14, 8, 0.65));
+}
+
+.card.soon::before {
+    background: var(--amber);
+    box-shadow: 0 0 14px var(--amber-glow);
+}
+
+.card.active {
+    border-color: rgba(46, 230, 168, 0.55);
+    background: linear-gradient(180deg, rgba(14, 42, 32, 0.6), rgba(8, 22, 16, 0.7));
+    animation: cardPulse 1.4s ease-in-out infinite;
+}
+
+.card.active::before {
+    background: var(--green);
+    box-shadow: 0 0 16px var(--green-glow);
+    animation: stripeBlink 1.4s ease-in-out infinite;
+}
+
+@keyframes cardPulse {
+    0%, 100% {
+        box-shadow: 0 0 6px 0 rgba(46, 230, 168, 0.25);
+        border-color: rgba(46, 230, 168, 0.55);
+    }
+    50% {
+        box-shadow: 0 0 28px 2px rgba(46, 230, 168, 0.55);
+        border-color: rgba(46, 230, 168, 0.95);
+    }
+}
+
+@keyframes stripeBlink {
+    0%, 100% { box-shadow: 0 0 10px var(--green-glow); opacity: 0.85; }
+    50%      { box-shadow: 0 0 22px var(--green-glow); opacity: 1; }
+}
+
+.card.active .countdown {
+    animation: liveBlink 1.4s ease-in-out infinite;
+}
+
+/* Card header */
+.card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.card-title {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    flex: 1;
+}
+
+.card-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.5px;
+    line-height: 1.15;
+}
+
+.card-name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-map {
+    font-size: 10px;
+    color: var(--text-mute);
+    letter-spacing: 1.3px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.card-map .pin-ico {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--text-mute);
+    box-shadow: 0 0 0 2px rgba(120, 160, 220, 0.18);
+}
+
+.kind-badge {
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-mute);
+    margin-left: 4px;
+    display: none;
+}
+
+body.show-badges .kind-badge { display: inline-block; }
+
+/* Legend (only in unified view) */
+.legend {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    background: rgba(8, 16, 32, 0.5);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    font-size: 10px;
+    letter-spacing: 1.3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    font-weight: 600;
+}
+
+body.show-badges .legend { display: flex; }
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+}
+
+.legend-dot.invasao {
+    background: linear-gradient(180deg, #ff5e7a, #c93e5c);
+    box-shadow: 0 0 8px rgba(255, 94, 122, 0.5);
+}
+
+.legend-dot.evento {
+    background: linear-gradient(180deg, #4ab8ff, #1565c9);
+    box-shadow: 0 0 8px rgba(0, 153, 255, 0.5);
+}
+
+.legend-sep {
+    width: 1px;
+    height: 12px;
+    background: var(--line-strong);
+}
+
+.kind-badge.invasao {
+    color: #ff9bb2;
+    border-color: rgba(255, 94, 122, 0.3);
+    background: rgba(255, 94, 122, 0.08);
+}
+
+.kind-badge.evento {
+    color: #9bd6ff;
+    border-color: rgba(0, 153, 255, 0.3);
+    background: rgba(0, 153, 255, 0.08);
+}
+
+.pill {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 4px 9px;
+    border-radius: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.3px;
+    background: rgba(120, 160, 220, 0.10);
+    color: var(--text-dim);
+    white-space: nowrap;
+    border: 1px solid var(--line);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.pill.soon {
+    background: var(--amber-soft);
+    color: var(--amber);
+    border-color: rgba(255, 181, 71, 0.4);
+}
+
+.pill.active {
+    background: var(--green-soft);
+    color: var(--green);
+    border-color: rgba(46, 230, 168, 0.45);
+}
+
+.pill .pulse {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 6px currentColor;
+}
+
+.pill.active .pulse { animation: live 1.2s infinite; }
+
+/* Countdown row */
+.countdown-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 9px;
+    gap: 12px;
+}
+
+.countdown {
+    font-size: 28px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 1px;
+    color: var(--text);
+    line-height: 1;
+}
+
+.card.soon .countdown {
+    color: var(--amber);
+    text-shadow: 0 0 16px var(--amber-glow);
+}
+
+.card.active .countdown {
+    color: var(--green);
+    text-shadow: 0 0 16px var(--green-glow);
+}
+
+.countdown-info {
+    text-align: right;
+    line-height: 1.3;
+}
+
+.countdown-info-label {
+    font-size: 9px;
+    color: var(--text-mute);
+    text-transform: uppercase;
+    letter-spacing: 1.3px;
+}
+
+.countdown-info-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+.card.active .countdown-info-value {
+    color: var(--green);
+}
+
+/* Progress bar */
+.progress {
+    height: 3px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    position: relative;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, rgba(0, 224, 255, 0.3), var(--cyan));
+    border-radius: 2px;
+    transition: width 1s linear;
+    box-shadow: 0 0 10px var(--cyan-glow);
+}
+
+.card.soon .progress-bar {
+    background: linear-gradient(90deg, rgba(255, 181, 71, 0.3), var(--amber));
+    box-shadow: 0 0 10px var(--amber-glow);
+}
+
+.card.active .progress-bar {
+    background: linear-gradient(90deg, rgba(46, 230, 168, 0.3), var(--green));
+    box-shadow: 0 0 10px var(--green-glow);
+    width: 100% !important;
+    animation: activeBar 2s linear infinite;
+}
+
+@keyframes activeBar {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+/* Section label */
+.sec-label {
+    font-size: 9px;
+    color: var(--text-mute);
+    text-transform: uppercase;
+    letter-spacing: 1.3px;
+    margin-bottom: 7px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+}
+
+.sec-label-meta {
+    color: var(--text-dim);
+    font-weight: 600;
+}
+
+/* Schedule chips */
+.schedule {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 11px;
+}
+
+.tc {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 7px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.035);
+    color: var(--text-dim);
+    border: 1px solid var(--line);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.4px;
+    min-width: 42px;
+    text-align: center;
+}
+
+.tc.past {
+    opacity: 0.32;
+}
+
+.tc.next {
+    background: rgba(0, 224, 255, 0.14);
+    color: var(--cyan);
+    border-color: rgba(0, 224, 255, 0.4);
+    box-shadow: 0 0 10px rgba(0, 224, 255, 0.18);
+}
+
+.tc.current {
+    background: rgba(46, 230, 168, 0.18);
+    color: var(--green);
+    border-color: rgba(46, 230, 168, 0.45);
+    box-shadow: 0 0 10px rgba(46, 230, 168, 0.22);
+}
+
+/* Drops */
+.drops {
+    background: rgba(0, 0, 0, 0.28);
+    border-radius: 9px;
+    padding: 9px 11px;
+    border: 1px solid var(--line);
+}
+
+.drop-item {
+    font-size: 11px;
+    color: var(--text-dim);
+    padding: 2px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.5;
+}
+
+.drop-item:not(:last-child) {
+    border-bottom: 1px dashed rgba(120, 160, 220, 0.06);
+    padding-bottom: 4px;
+    margin-bottom: 2px;
+}
+
+/* Empty */
+.empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-mute);
+    font-size: 12px;
+}
+
+.footer {
+    text-align: center;
+    font-size: 9px;
+    color: var(--text-mute);
+    letter-spacing: 1.5px;
+    padding: 4px 0 6px;
+    text-transform: uppercase;
+}
+
+.footer span { color: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<div class="titlebar">
+    <div class="brand">
+        <div class="brand-logo"></div>
+        <div>
+            <div class="brand-text">NORTON MU</div>
+            <div class="brand-sub">EVENT TRACKER</div>
+        </div>
+    </div>
+    <div class="titlebar-actions">
+        <button class="tb-btn" id="pinBtn" title="Manter no topo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 17v5M9 3h6l-1 4 3 6H7l3-6-1-4z" stroke-linejoin="round" stroke-linecap="round"/></svg>
+        </button>
+        <button class="tb-btn" id="settingsBtn" title="Configurações">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-linejoin="round" stroke-linecap="round"/></svg>
+        </button>
+        <button class="tb-btn" id="minBtn" title="Minimizar para bandeja">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="5" y1="12" x2="19" y2="12" stroke-linecap="round"/></svg>
+        </button>
+        <button class="tb-btn close" id="closeBtn" title="Fechar para bandeja">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="6" y1="6" x2="18" y2="18" stroke-linecap="round"/><line x1="18" y1="6" x2="6" y2="18" stroke-linecap="round"/></svg>
+        </button>
+    </div>
+</div>
+
+<div class="content">
+
+    <div class="banner">
+        <div class="banner-top">
+            <div class="clock-block">
+                <div class="clock" id="clock">--:--:--</div>
+                <div class="clock-date" id="date">---</div>
+            </div>
+            <div class="server-block">
+                <div class="server-label">Servidor</div>
+                <div class="server-name"><span class="live-dot"></span>NORTON</div>
+            </div>
+        </div>
+        <div class="banner-next">
+            <div class="banner-next-left">
+                <div class="banner-next-label">Próximo a aparecer</div>
+                <div class="banner-next-name" id="nextName">--</div>
+                <div class="banner-next-meta" id="nextMeta">--</div>
+            </div>
+            <div class="banner-next-right">
+                <div class="banner-countdown" id="nextCountdown">--:--:--</div>
+                <div class="banner-at" id="nextAt">---</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="settings" id="settings">
+        <div class="settings-group">
+            <div class="settings-title">Avisos sonoros</div>
+            <div class="toggle-row">
+                <div class="chip" data-setting="alert5"><div class="led"></div>5 min antes</div>
+                <div class="chip" data-setting="alert1"><div class="led"></div>1 min antes</div>
+                <div class="chip" data-setting="alertStart"><div class="led"></div>Ao iniciar</div>
+            </div>
+        </div>
+        <div class="settings-group">
+            <div class="settings-title">Geral</div>
+            <div class="toggle-row">
+                <div class="chip danger" data-setting="muted"><div class="led"></div>Mudo total</div>
+                <div class="chip" data-setting="desktopNotif"><div class="led"></div>Notificações desktop</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <div class="tab" data-tab="all">Tudo<span class="tab-count" id="allCount">0</span></div>
+        <div class="tab" data-tab="bosses">Invasões<span class="tab-count" id="bossCount">0</span></div>
+        <div class="tab" data-tab="events">Eventos<span class="tab-count" id="eventCount">0</span></div>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item"><span class="legend-dot invasao"></span>Invasões</div>
+        <div class="legend-sep"></div>
+        <div class="legend-item"><span class="legend-dot evento"></span>Eventos</div>
+    </div>
+
+    <div id="cards"></div>
+
+    <div class="footer">Norton MU · <span>v1.0</span></div>
+
+</div>
+
+<script>
+const { invoke } = window.__TAURI__.core;
+const { listen } = window.__TAURI__.event;
+
+/* ============ DATA ============ */
+const KIND_BOSS = 'invasao';
+const KIND_EVENT = 'evento';
+
+const bosses = [
+    {
+        name: "BALROG",
+        map: "Losttower",
+        activeMin: 10,
+        times: ["02:29","05:14","07:59","10:44","13:29","19:14","21:59"],
+        details: [
+            { ico: "👹", text: "5 Mobs" },
+            { ico: "💰", text: "3 HP por Mob" },
+            { ico: "💎", text: "Elegant Jewelry Case" }
+        ]
+    },
+    {
+        name: "GORGON",
+        map: "Dungeon",
+        activeMin: 10,
+        times: ["00:44","03:29","06:14","08:59","11:44","14:29","17:14","19:59","22:44","22:59"],
+        details: [
+            { ico: "👹", text: "5 Mobs" },
+            { ico: "💰", text: "10 HP por Mob" },
+            { ico: "🟢", text: "80% Green Chaos Box" },
+            { ico: "😈", text: "20% Demon" }
+        ]
+    },
+    {
+        name: "ICE QUEEN",
+        map: "Devias",
+        activeMin: 10,
+        times: ["00:59","03:44","06:29","09:14","11:59","14:44","17:29","20:14","23:14","23:29"],
+        details: [
+            { ico: "👹", text: "5 Mobs" },
+            { ico: "💰", text: "10 HP por Mob" },
+            { ico: "🟢", text: "80% Green Chaos Box" },
+            { ico: "😇", text: "20% Angel" }
+        ]
+    },
+    {
+        name: "ZAIKAN",
+        map: "Tarkan",
+        activeMin: 10,
+        times: ["02:59","10:59","15:59","18:59","21:59"],
+        details: [
+            { ico: "👹", text: "3 Mobs" },
+            { ico: "💰", text: "20 HP por Mob" },
+            { ico: "💍", text: "Ring ou Pendant" }
+        ]
+    },
+    {
+        name: "WHITE WIZARD",
+        map: "Noria",
+        activeMin: 10,
+        times: ["01:14","03:59","06:44","09:29","12:14","14:59","17:44","20:29","23:14"],
+        details: [
+            { ico: "👹", text: "5 Mobs" },
+            { ico: "💰", text: "1 HP por Mob" },
+            { ico: "🟢", text: "80% Green Chaos Box" },
+            { ico: "💍", text: "20% Wizard Ring" }
+        ]
+    },
+    {
+        name: "CAPTAIN GRIZZLY",
+        map: "Elveland",
+        activeMin: 10,
+        times: ["02:14","04:59","07:44","10:29","13:14","18:59","21:44"],
+        details: [
+            { ico: "👹", text: "5 Mobs" },
+            { ico: "💰", text: "3 HP por Mob" },
+            { ico: "💎", text: "Elegant Jewelry Case" }
+        ]
+    },
+    {
+        name: "RED DRAGON",
+        map: "Devias",
+        activeMin: 10,
+        times: ["00:14","02:59","05:44","08:29","11:14","13:59","16:44","19:29","22:14"],
+        details: [
+            { ico: "👹", text: "5 Mobs" },
+            { ico: "💰", text: "1 HP por Mob" },
+            { ico: "🃏", text: "50% Chaos Card" },
+            { ico: "💎", text: "Elegant Jewelry Case" }
+        ]
+    },
+    {
+        name: "BLOODY WITCH QUEEN",
+        map: "Aida",
+        activeMin: 10,
+        times: ["02:44","10:44","18:44","21:44"],
+        details: [
+            { ico: "👹", text: "3 Mobs" },
+            { ico: "💰", text: "20 HP por Mob" },
+            { ico: "🍀", text: "Talisman of Luck" },
+            { ico: "🧩", text: "Talisman of Assembly" }
+        ]
+    }
+];
+
+const gameEvents = [
+    {
+        name: "Blood Castle",
+        map: "Evento",
+        duration: 20,
+        times: ["01:55","03:55","05:55","07:55","09:55","11:55","13:55","15:55","17:55","19:55","21:55","23:55"],
+        details: [
+            { ico: "⏱", text: "Duração: 20 minutos" },
+            { ico: "🩸", text: "Resgatar o arma sagrada" },
+            { ico: "💰", text: "Jewels + EXP bônus" }
+        ]
+    },
+    {
+        name: "Devil Square",
+        map: "Evento",
+        duration: 25,
+        times: ["00:25","02:25","04:25","06:25","08:25","10:25","12:25","14:25","16:25","18:25","20:25","22:25"],
+        details: [
+            { ico: "⏱", text: "Duração: 25 minutos" },
+            { ico: "👹", text: "Ondas de monstros" },
+            { ico: "💰", text: "Jewels + Box of Luck" }
+        ]
+    }
+];
+
+// Tag items with category
+bosses.forEach(b => b.kind = KIND_BOSS);
+gameEvents.forEach(e => e.kind = KIND_EVENT);
+
+/* ============ STATE / SETTINGS ============ */
+const defaults = {
+    alert5: true,
+    alert1: true,
+    alertStart: true,
+    muted: false,
+    desktopNotif: true,
+    pinned: true,
+    tab: 'all'
+};
+
+const settings = Object.assign({}, defaults, JSON.parse(localStorage.getItem('norton-settings') || '{}'));
+
+function saveSettings() {
+    localStorage.setItem('norton-settings', JSON.stringify(settings));
+}
+
+let currentTab = settings.tab;
+const alerted = new Set();
+
+/* ============ TIME / SCHEDULE HELPERS ============ */
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function fmtHMS(ms) {
+    const total = Math.max(0, Math.floor(ms / 1000));
+    return pad(Math.floor(total / 3600)) + ':' +
+           pad(Math.floor((total % 3600) / 60)) + ':' +
+           pad(total % 60);
+}
+
+function timeToToday(t) {
+    const [h, m] = t.split(':');
+    const d = new Date();
+    d.setHours(+h, +m, 0, 0);
+    return d;
+}
+
+function getSchedule(times) {
+    const now = new Date();
+    let nextDate = null;
+    let nextTime = null;
+    let prevDate = null;
+    let prevTime = null;
+
+    times.forEach(t => {
+        const d = timeToToday(t);
+        if (d > now) {
+            if (!nextDate || d < nextDate) {
+                nextDate = d;
+                nextTime = t;
+            }
+        } else {
+            if (!prevDate || d > prevDate) {
+                prevDate = d;
+                prevTime = t;
+            }
+        }
+    });
+
+    // If everything is in the past today, next is tomorrow's earliest
+    if (!nextDate) {
+        const sorted = [...times].sort();
+        const first = sorted[0];
+        nextTime = first;
+        nextDate = timeToToday(first);
+        nextDate.setDate(nextDate.getDate() + 1);
+    }
+
+    // If nothing has happened yet today, prev is yesterday's latest
+    if (!prevDate) {
+        const sorted = [...times].sort();
+        const last = sorted[sorted.length - 1];
+        prevTime = last;
+        prevDate = timeToToday(last);
+        prevDate.setDate(prevDate.getDate() - 1);
+    }
+
+    return { nextDate, nextTime, prevDate, prevTime };
+}
+
+function getActive(item) {
+    // Active = currently inside a spawn window (duration for events, activeMin for bosses)
+    const dur = item.duration || item.activeMin || 5;
+    const now = new Date();
+    for (const t of item.times) {
+        const start = timeToToday(t);
+        const end = new Date(start.getTime() + dur * 60000);
+        if (now >= start && now < end) {
+            return { start, end, time: t, remainingMs: end - now, durationMs: dur * 60000 };
+        }
+    }
+    return null;
+}
+
+function computeState(item) {
+    const now = new Date();
+    const sch = getSchedule(item.times);
+    const active = getActive(item);
+    const msToNext = sch.nextDate - now;
+    const interval = sch.nextDate - sch.prevDate;
+    const progressPct = interval > 0
+        ? Math.max(0, Math.min(100, ((now - sch.prevDate) / interval) * 100))
+        : 0;
+    return { sch, active, msToNext, progressPct };
+}
+
+/* ============ AUDIO ============ */
+let audioCtx = null;
+function ensureAudio() {
+    if (!audioCtx) {
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+    }
+    return audioCtx;
+}
+
+// Resume audio on first user interaction (autoplay policy)
+function unlockAudio() {
+    ensureAudio();
+    document.removeEventListener('click', unlockAudio);
+    document.removeEventListener('keydown', unlockAudio);
+}
+document.addEventListener('click', unlockAudio);
+document.addEventListener('keydown', unlockAudio);
+
+function beep(freq, duration, when = 0) {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const t0 = ctx.currentTime + when;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, t0);
+    gain.gain.linearRampToValueAtTime(0.16, t0 + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + duration + 0.05);
+}
+
+function playAlert(kind) {
+    if (settings.muted) return;
+    if (kind === 'pre5') {
+        beep(520, 0.18, 0);
+    } else if (kind === 'pre1') {
+        beep(640, 0.16, 0);
+        beep(640, 0.16, 0.22);
+    } else if (kind === 'start') {
+        beep(880, 0.20, 0);
+        beep(1100, 0.22, 0.25);
+        beep(1320, 0.30, 0.50);
+    }
+}
+
+function notify(title, body) {
+    if (settings.muted) return;
+    if (!settings.desktopNotif) return;
+    try {
+        invoke('win_notify', { payload: { title, body, silent: true } });
+    } catch (e) {}
+}
+
+/* ============ ALERTS CHECK ============ */
+function checkAlerts(item, state) {
+    const { sch, active, msToNext } = state;
+    const baseKey = item.name + '_' + sch.nextDate.getTime();
+
+    // 5 min warning — fires once when crossing 5min threshold
+    if (settings.alert5 && msToNext > 0 && msToNext <= 5 * 60 * 1000) {
+        const k = baseKey + '_5';
+        if (!alerted.has(k)) {
+            // Check we're inside the 5min window (not e.g. 2min) — only first cross
+            if (msToNext > 4.4 * 60 * 1000) {
+                alerted.add(k);
+                playAlert('pre5');
+                notify(item.name + ' em ~5 min', '📍 ' + item.map + ' — às ' + sch.nextTime);
+            } else {
+                alerted.add(k); // skip but mark, we missed the window
+            }
+        }
+    }
+
+    // 1 min warning
+    if (settings.alert1 && msToNext > 0 && msToNext <= 60 * 1000) {
+        const k = baseKey + '_1';
+        if (!alerted.has(k)) {
+            if (msToNext > 50 * 1000) {
+                alerted.add(k);
+                playAlert('pre1');
+                notify(item.name + ' em ~1 min', '📍 ' + item.map + ' — às ' + sch.nextTime);
+            } else {
+                alerted.add(k);
+            }
+        }
+    }
+
+    // Start
+    if (active) {
+        const k = item.name + '_start_' + active.start.getTime();
+        if (!alerted.has(k)) {
+            alerted.add(k);
+            if (settings.alertStart) {
+                playAlert('start');
+                notify(
+                    '🔴 ' + item.name + ' está ATIVO',
+                    '📍 ' + item.map + ' — duração restante ' + fmtHMS(active.remainingMs)
+                );
+            }
+        }
+    }
+
+    // Prune memory: keep only last 80 keys
+    if (alerted.size > 80) {
+        const arr = Array.from(alerted);
+        arr.slice(0, arr.length - 60).forEach(k => alerted.delete(k));
+    }
+}
+
+/* ============ RENDER ============ */
+function buildCard(item) {
+    const card = document.createElement('div');
+    card.className = 'card kind-' + item.kind;
+    card.dataset.key = item.name;
+    card.innerHTML = `
+        <div class="card-head">
+            <div class="card-title">
+                <div class="card-name"></div>
+                <div class="card-map">
+                    <span class="pin-ico"></span>
+                    <span class="map-name"></span>
+                    <span class="kind-badge"></span>
+                </div>
+            </div>
+            <div class="pill"><span class="pulse"></span><span class="pill-text"></span></div>
+        </div>
+        <div class="countdown-row">
+            <div class="countdown">00:00:00</div>
+            <div class="countdown-info">
+                <div class="countdown-info-label"></div>
+                <div class="countdown-info-value"></div>
+            </div>
+        </div>
+        <div class="progress"><div class="progress-bar"></div></div>
+        <div class="sec-label">
+            <span>Horários do dia</span>
+            <span class="sec-label-meta"></span>
+        </div>
+        <div class="schedule"></div>
+        <div class="sec-label"><span>Recompensas & mobs</span></div>
+        <div class="drops"></div>
+    `;
+
+    // Build static parts once
+    card.querySelector('.card-name').textContent = item.name;
+    card.querySelector('.map-name').textContent = item.map;
+    const kb = card.querySelector('.kind-badge');
+    kb.classList.add(item.kind);
+    kb.textContent = item.kind === KIND_BOSS ? 'INVASÃO' : 'EVENTO';
+    card.querySelector('.sec-label-meta').textContent = item.times.length + ' por dia';
+    const dropsEl = card.querySelector('.drops');
+    if (item.details && item.details.length) {
+        dropsEl.innerHTML = item.details.map(d =>
+            '<div class="drop-item"><span>' + d.ico + '</span><span>' + d.text + '</span></div>'
+        ).join('');
+    } else {
+        dropsEl.innerHTML = '<div class="drop-item">Sem informações</div>';
+    }
+    const schEl = card.querySelector('.schedule');
+    schEl.innerHTML = item.times.map(t =>
+        '<span class="tc" data-t="' + t + '">' + t + '</span>'
+    ).join('');
+    return card;
+}
+
+function getSoonThresholdMs() {
+    // "Em breve" (yellow) window mirrors whichever alert is enabled — largest wins.
+    if (settings.alert5) return 5 * 60 * 1000;
+    if (settings.alert1) return 60 * 1000;
+    return 0;
+}
+
+function classifyStatus(state) {
+    if (state.active) return 'active';
+    const threshold = getSoonThresholdMs();
+    if (threshold > 0 && state.msToNext > 0 && state.msToNext <= threshold) return 'soon';
+    return 'wait';
+}
+
+function statusLabel(status) {
+    if (status === 'active') return 'Ao Vivo';
+    if (status === 'soon') return 'Em Breve';
+    return 'Aguardando';
+}
+
+function updateCard(card, item, state) {
+    const status = classifyStatus(state);
+
+    // Status classes
+    card.classList.toggle('active', status === 'active');
+    card.classList.toggle('soon', status === 'soon');
+
+    // Pill
+    const pill = card.querySelector('.pill');
+    pill.classList.remove('active', 'soon');
+    if (status !== 'wait') pill.classList.add(status);
+    card.querySelector('.pill-text').textContent = statusLabel(status);
+    card.querySelector('.pulse').style.display = status === 'wait' ? 'none' : 'inline-block';
+
+    // Countdown text
+    const cd = card.querySelector('.countdown');
+    const cdLabel = card.querySelector('.countdown-info-label');
+    const cdValue = card.querySelector('.countdown-info-value');
+    if (state.active) {
+        cd.textContent = fmtHMS(state.active.remainingMs);
+        cdLabel.textContent = 'Termina às';
+        cdValue.textContent = pad(state.active.end.getHours()) + ':' + pad(state.active.end.getMinutes());
+    } else {
+        cd.textContent = fmtHMS(state.msToNext);
+        cdLabel.textContent = 'Próximo às';
+        cdValue.textContent = state.sch.nextTime;
+    }
+
+    // Progress
+    const bar = card.querySelector('.progress-bar');
+    if (state.active) {
+        // active animation handles via CSS
+        bar.style.width = '100%';
+    } else {
+        bar.style.width = state.progressPct.toFixed(2) + '%';
+    }
+
+    // Schedule chips state
+    const now = new Date();
+    const currentMin = pad(now.getHours()) + ':' + pad(now.getMinutes());
+    card.querySelectorAll('.tc').forEach(chip => {
+        const t = chip.dataset.t;
+        const td = timeToToday(t);
+        const isPast = td <= now;
+        const isNext = t === state.sch.nextTime && state.sch.nextDate.toDateString() === new Date().toDateString();
+        // "current" if the active window started at this time
+        const isCurrent = state.active && state.active.time === t;
+        chip.classList.toggle('past', isPast && !isCurrent && !isNext);
+        chip.classList.toggle('next', isNext && !isCurrent);
+        chip.classList.toggle('current', isCurrent);
+    });
+}
+
+/* ============ MAIN LOOP ============ */
+function render() {
+    const now = new Date();
+
+    // Clock
+    document.getElementById('clock').textContent = now.toLocaleTimeString('pt-BR');
+    const dateText = now.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'short' });
+    document.getElementById('date').textContent = dateText.toUpperCase();
+
+    // Counts
+    document.getElementById('bossCount').textContent = bosses.length;
+    document.getElementById('eventCount').textContent = gameEvents.length;
+    document.getElementById('allCount').textContent = bosses.length + gameEvents.length;
+
+    // Compute everything once
+    const allComputed = [...bosses, ...gameEvents].map(item => ({ item, state: computeState(item) }));
+
+    // Sort by: active first, then nearest
+    const sortByUrgency = (a, b) => {
+        if (a.state.active && !b.state.active) return -1;
+        if (!a.state.active && b.state.active) return 1;
+        if (a.state.active && b.state.active) return a.state.active.remainingMs - b.state.active.remainingMs;
+        return a.state.msToNext - b.state.msToNext;
+    };
+
+    // Banner: next event across all categories
+    const sortedAll = [...allComputed].sort(sortByUrgency);
+    if (sortedAll.length) {
+        const top = sortedAll[0];
+        document.getElementById('nextName').textContent = top.item.name;
+        const cdEl = document.getElementById('nextCountdown');
+        const atEl = document.getElementById('nextAt');
+        const metaEl = document.getElementById('nextMeta');
+        const kindTag = top.item.kind === KIND_BOSS ? 'INVASÃO' : 'EVENTO';
+        const topStatus = classifyStatus(top.state);
+        cdEl.classList.toggle('active', topStatus === 'active');
+        cdEl.classList.toggle('soon', topStatus === 'soon');
+        if (top.state.active) {
+            cdEl.textContent = fmtHMS(top.state.active.remainingMs);
+            atEl.textContent = '🔴 AO VIVO • ' + top.item.map;
+            metaEl.textContent = kindTag + ' · Termina às ' + pad(top.state.active.end.getHours()) + ':' + pad(top.state.active.end.getMinutes());
+        } else {
+            cdEl.textContent = fmtHMS(top.state.msToNext);
+            atEl.textContent = 'às ' + top.state.sch.nextTime;
+            metaEl.textContent = kindTag + ' · 📍 ' + top.item.map;
+        }
+    }
+
+    // Check alerts on ALL items (so alerts fire regardless of tab)
+    allComputed.forEach(({ item, state }) => checkAlerts(item, state));
+
+    // Render only the active tab
+    let tabItems;
+    if (currentTab === 'all') {
+        tabItems = allComputed;
+    } else if (currentTab === 'bosses') {
+        tabItems = allComputed.filter(c => c.item.kind === KIND_BOSS);
+    } else {
+        tabItems = allComputed.filter(c => c.item.kind === KIND_EVENT);
+    }
+    tabItems.sort(sortByUrgency);
+
+    // Show kind badges only on the unified tab
+    const showBadges = currentTab === 'all';
+    document.body.classList.toggle('show-badges', showBadges);
+
+    const container = document.getElementById('cards');
+    const currentKeys = new Set(tabItems.map(c => c.item.name));
+
+    // Remove cards no longer in this view
+    Array.from(container.children).forEach(child => {
+        if (!currentKeys.has(child.dataset.key)) child.remove();
+    });
+
+    // Ensure & update
+    tabItems.forEach((entry, idx) => {
+        let card = container.querySelector('[data-key="' + CSS.escape(entry.item.name) + '"]');
+        if (!card) {
+            card = buildCard(entry.item);
+            container.appendChild(card);
+        }
+        updateCard(card, entry.item, entry.state);
+        if (card.style.order !== String(idx)) card.style.order = String(idx);
+    });
+}
+
+/* ============ UI WIRING ============ */
+function initSettings() {
+    document.querySelectorAll('.chip[data-setting]').forEach(chip => {
+        const key = chip.dataset.setting;
+        chip.classList.toggle('on', !!settings[key]);
+        chip.addEventListener('click', () => {
+            settings[key] = !settings[key];
+            chip.classList.toggle('on', settings[key]);
+            saveSettings();
+            // Resume audio context on user interaction (browsers require gesture)
+            if (key === 'muted' || key.startsWith('alert')) ensureAudio();
+        });
+    });
+}
+
+function initTabs() {
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.tab === currentTab);
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentTab = tab.dataset.tab;
+            settings.tab = currentTab;
+            saveSettings();
+            document.getElementById('cards').innerHTML = '';
+            render();
+        });
+    });
+}
+
+function initTitlebar() {
+    const pinBtn = document.getElementById('pinBtn');
+
+    const applyPin = (pinned) => {
+        settings.pinned = pinned;
+        pinBtn.classList.toggle('active', pinned);
+        invoke('win_pin', { pinned });
+        saveSettings();
+    };
+
+    applyPin(settings.pinned);
+
+    pinBtn.addEventListener('click', () => applyPin(!settings.pinned));
+
+    listen('pin-changed', (event) => {
+        const pinned = event.payload;
+        settings.pinned = pinned;
+        pinBtn.classList.toggle('active', pinned);
+        saveSettings();
+    });
+
+    document.getElementById('settingsBtn').addEventListener('click', (e) => {
+        document.getElementById('settings').classList.toggle('open');
+        e.currentTarget.classList.toggle('active');
+    });
+
+    document.getElementById('minBtn').addEventListener('click', () => {
+        invoke('win_minimize');
+    });
+
+    document.getElementById('closeBtn').addEventListener('click', () => {
+        invoke('win_close');
+    });
+}
+
+initSettings();
+initTabs();
+initTitlebar();
+
+// First paint
+render();
+setInterval(render, 1000);
+</script>
+
+</body>
+</html>

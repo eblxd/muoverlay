@@ -3,11 +3,16 @@ node_modules/
 tauri-app/src-tauri/target/
 tauri-app/src-tauri/gen/
 target/
-dist/
 
 # Electron build output (original Electron version)
 Norton Overlay/
 Norton Overlay.zip
+
+# Tauri build outputs copied to project root
+Norton Eventos*.exe
+Norton Eventos*.sig
+norton-eventos.exe
+norton-eventos-*.exe
 
 # Tauri/cargo lockfiles for the app are OK to commit, but build outputs are not
 
