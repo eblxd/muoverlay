@@ -1,0 +1,50 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Norton Eventos",
+  "version": "1.0.0",
+  "identifier": "com.muoverlay.app",
+  "build": {
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Norton Eventos",
+        "width": 460,
+        "height": 780,
+        "minWidth": 380,
+        "minHeight": 560,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "transparent": false,
+        "backgroundColor": "#04070d",
+        "resizable": true,
+        "skipTaskbar": false,
+        "visible": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": ["icons/icon.png", "icons/icon.ico"],
+    "createUpdaterArtifacts": true,
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/eblxd/muoverlay/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDUxRDJBRDQ4NkFFQUU3RDIKUldUUzUrcHFTSzNTVVJUU0EwMjZ6WUxlZFdFSkVyVzNPQlBiMHlLZFJ3UlJXYmtBVGs3UFNLTkUK"
+    }
+  }
+}

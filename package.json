@@ -1,0 +1,22 @@
+{
+  "name": "mu-overlay",
+  "version": "1.0.0",
+  "description": "MU Online Overlay Timer",
+  "author": "Binho",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^42.1.0",
+    "electron-builder": "^26.8.1"
+  },
+  "build": {
+    "appId": "com.muoverlay.app",
+    "productName": "MU Overlay",
+    "win": {
+      "target": "portable"
+    }
+  }
+}

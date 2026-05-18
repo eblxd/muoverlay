@@ -1,0 +1,33 @@
+# Build artifacts
+node_modules/
+tauri-app/src-tauri/target/
+tauri-app/src-tauri/gen/
+target/
+dist/
+
+# Electron build output (original Electron version)
+Norton Overlay/
+Norton Overlay.zip
+
+# Tauri/cargo lockfiles for the app are OK to commit, but build outputs are not
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Secrets — NEVER commit
+.tauri/
+*.key
+*.key.pub
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
