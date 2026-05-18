@@ -125,9 +125,16 @@ async fn check_for_updates(handle: AppHandle) {
         Ok(Some(u)) => u,
         _ => return,
     };
-    let _ = update
+    if update
         .download_and_install(|_chunk, _total| {}, || {})
-        .await;
+        .await
+        .is_ok()
+    {
+        // On Windows the NSIS installer kills + relaunches us automatically, but
+        // restart() guarantees the swap if it doesn't (and is a no-op on macOS/Linux
+        // tarball updates that just rewrite the binary in place).
+        handle.restart();
+    }
 }
 
 fn main() {

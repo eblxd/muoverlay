@@ -173,11 +173,20 @@ body::before {
 /* ============ CONTENT ============ */
 .content {
     height: calc(100vh - 40px);
-    overflow-y: auto;
-    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     padding: 12px;
     position: relative;
     z-index: 2;
+}
+
+.content > .banner,
+.content > .settings,
+.content > .tabs,
+.content > .legend,
+.content > .footer {
+    flex-shrink: 0;
 }
 
 .content::-webkit-scrollbar { width: 6px; }
@@ -508,7 +517,14 @@ body::before {
 }
 
 /* ============ CARDS ============ */
-#cards { display: flex; flex-direction: column; }
+#cards {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+}
 
 .card {
     background: linear-gradient(180deg, rgba(15, 26, 48, 0.72), rgba(8, 14, 28, 0.72));
@@ -969,8 +985,11 @@ body.show-badges .legend { display: flex; }
     font-size: 9px;
     color: var(--text-mute);
     letter-spacing: 1.5px;
-    padding: 4px 0 6px;
+    padding: 8px 0 4px;
+    margin-top: 6px;
     text-transform: uppercase;
+    border-top: 1px solid rgba(120, 160, 220, 0.10);
+    background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.18));
 }
 
 .footer span { color: var(--text-dim); }
@@ -1033,6 +1052,7 @@ body.show-badges .legend { display: flex; }
             <div class="settings-title">Avisos sonoros</div>
             <div class="toggle-row">
                 <div class="chip" data-setting="alert5"><div class="led"></div>5 min antes</div>
+                <div class="chip" data-setting="alert3"><div class="led"></div>3 min antes</div>
                 <div class="chip" data-setting="alert1"><div class="led"></div>1 min antes</div>
                 <div class="chip" data-setting="alertStart"><div class="led"></div>Ao iniciar</div>
             </div>
@@ -1060,7 +1080,7 @@ body.show-badges .legend { display: flex; }
 
     <div id="cards"></div>
 
-    <div class="footer">Norton MU · <span>v1.0</span></div>
+    <div class="footer">Norton MU · <span id="appVersion">v1.0</span></div>
 
 </div>
 
@@ -1200,6 +1220,7 @@ gameEvents.forEach(e => e.kind = KIND_EVENT);
 /* ============ STATE / SETTINGS ============ */
 const defaults = {
     alert5: true,
+    alert3: true,
     alert1: true,
     alertStart: true,
     muted: false,
@@ -1234,15 +1255,27 @@ function timeToToday(t) {
     return d;
 }
 
-function getSchedule(times) {
+// Invasion (boss) spawns land 1 min AFTER the listed schedule beat — listed values
+// are the warning chime, actual spawn happens on the following minute.
+// Events (Blood Castle, Devil Square, etc.) start on the listed time exactly.
+const INVASION_OFFSET_MS = 60 * 1000;
+function offsetMsFor(item) {
+    return item.kind === KIND_BOSS ? INVASION_OFFSET_MS : 0;
+}
+function spawnAt(t, offsetMs) {
+    return new Date(timeToToday(t).getTime() + offsetMs);
+}
+
+function getSchedule(item) {
     const now = new Date();
+    const offset = offsetMsFor(item);
     let nextDate = null;
     let nextTime = null;
     let prevDate = null;
     let prevTime = null;
 
-    times.forEach(t => {
-        const d = timeToToday(t);
+    item.times.forEach(t => {
+        const d = spawnAt(t, offset);
         if (d > now) {
             if (!nextDate || d < nextDate) {
                 nextDate = d;
@@ -1258,19 +1291,19 @@ function getSchedule(times) {
 
     // If everything is in the past today, next is tomorrow's earliest
     if (!nextDate) {
-        const sorted = [...times].sort();
+        const sorted = [...item.times].sort();
         const first = sorted[0];
         nextTime = first;
-        nextDate = timeToToday(first);
+        nextDate = spawnAt(first, offset);
         nextDate.setDate(nextDate.getDate() + 1);
     }
 
     // If nothing has happened yet today, prev is yesterday's latest
     if (!prevDate) {
-        const sorted = [...times].sort();
+        const sorted = [...item.times].sort();
         const last = sorted[sorted.length - 1];
         prevTime = last;
-        prevDate = timeToToday(last);
+        prevDate = spawnAt(last, offset);
         prevDate.setDate(prevDate.getDate() - 1);
     }
 
@@ -1280,9 +1313,10 @@ function getSchedule(times) {
 function getActive(item) {
     // Active = currently inside a spawn window (duration for events, activeMin for bosses)
     const dur = item.duration || item.activeMin || 5;
+    const offset = offsetMsFor(item);
     const now = new Date();
     for (const t of item.times) {
-        const start = timeToToday(t);
+        const start = spawnAt(t, offset);
         const end = new Date(start.getTime() + dur * 60000);
         if (now >= start && now < end) {
             return { start, end, time: t, remainingMs: end - now, durationMs: dur * 60000 };
@@ -1293,7 +1327,7 @@ function getActive(item) {
 
 function computeState(item) {
     const now = new Date();
-    const sch = getSchedule(item.times);
+    const sch = getSchedule(item);
     const active = getActive(item);
     const msToNext = sch.nextDate - now;
     const interval = sch.nextDate - sch.prevDate;
@@ -1345,6 +1379,8 @@ function playAlert(kind) {
     if (settings.muted) return;
     if (kind === 'pre5') {
         beep(520, 0.18, 0);
+    } else if (kind === 'pre3') {
+        beep(580, 0.17, 0);
     } else if (kind === 'pre1') {
         beep(640, 0.16, 0);
         beep(640, 0.16, 0.22);
@@ -1379,6 +1415,20 @@ function checkAlerts(item, state) {
                 notify(item.name + ' em ~5 min', '📍 ' + item.map + ' — às ' + sch.nextTime);
             } else {
                 alerted.add(k); // skip but mark, we missed the window
+            }
+        }
+    }
+
+    // 3 min warning
+    if (settings.alert3 && msToNext > 0 && msToNext <= 3 * 60 * 1000) {
+        const k = baseKey + '_3';
+        if (!alerted.has(k)) {
+            if (msToNext > 2.4 * 60 * 1000) {
+                alerted.add(k);
+                playAlert('pre3');
+                notify(item.name + ' em ~3 min', '📍 ' + item.map + ' — às ' + sch.nextTime);
+            } else {
+                alerted.add(k);
             }
         }
     }
@@ -1478,6 +1528,7 @@ function buildCard(item) {
 function getSoonThresholdMs() {
     // "Em breve" (yellow) window mirrors whichever alert is enabled — largest wins.
     if (settings.alert5) return 5 * 60 * 1000;
+    if (settings.alert3) return 3 * 60 * 1000;
     if (settings.alert1) return 60 * 1000;
     return 0;
 }
@@ -1535,9 +1586,10 @@ function updateCard(card, item, state) {
     // Schedule chips state
     const now = new Date();
     const currentMin = pad(now.getHours()) + ':' + pad(now.getMinutes());
+    const chipOffset = offsetMsFor(item);
     card.querySelectorAll('.tc').forEach(chip => {
         const t = chip.dataset.t;
-        const td = timeToToday(t);
+        const td = spawnAt(t, chipOffset);
         const isPast = td <= now;
         const isNext = t === state.sch.nextTime && state.sch.nextDate.toDateString() === new Date().toDateString();
         // "current" if the active window started at this time
@@ -1702,6 +1754,14 @@ function initTitlebar() {
 initSettings();
 initTabs();
 initTitlebar();
+
+// Populate version from Tauri app metadata (avoids hardcoding)
+if (window.__TAURI__ && window.__TAURI__.app && window.__TAURI__.app.getVersion) {
+    window.__TAURI__.app.getVersion().then(v => {
+        const el = document.getElementById('appVersion');
+        if (el) el.textContent = 'v' + v;
+    }).catch(() => {});
+}
 
 // First paint
 render();
