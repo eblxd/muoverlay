@@ -535,6 +535,8 @@ body::before {
     transition: 0.25s;
     position: relative;
     overflow: hidden;
+    flex-shrink: 0;
+    cursor: pointer;
     backdrop-filter: blur(4px);
 }
 
@@ -855,6 +857,29 @@ body.show-badges .legend { display: flex; }
     color: var(--green);
 }
 
+/* Collapsible body — cards default to fully expanded.
+   Click the card to collapse to head + countdown; LIVE cards stay open. */
+.card.collapsed:not(.active) .progress,
+.card.collapsed:not(.active) .sec-label,
+.card.collapsed:not(.active) .schedule,
+.card.collapsed:not(.active) .drops {
+    display: none;
+}
+
+/* Chevron hint indicating collapse direction */
+.card:not(.collapsed):not(.active) .countdown-info::after {
+    content: " ▴";
+    color: var(--text-mute);
+    font-size: 10px;
+    margin-left: 4px;
+}
+.card.collapsed:not(.active) .countdown-info::after {
+    content: " ▾";
+    color: var(--text-mute);
+    font-size: 10px;
+    margin-left: 4px;
+}
+
 /* Progress bar */
 .progress {
     height: 3px;
@@ -954,6 +979,53 @@ body.show-badges .legend { display: flex; }
     border-radius: 9px;
     padding: 9px 11px;
     border: 1px solid var(--line);
+}
+
+/* Last-kill control (respawn bosses) */
+.lastkill-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 9px;
+    margin-bottom: 11px;
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    padding: 9px 11px;
+}
+
+.lastkill-display {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+.lastkill-btn {
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--cyan);
+    background: rgba(0, 224, 255, 0.10);
+    border: 1px solid rgba(0, 224, 255, 0.35);
+    border-radius: 7px;
+    padding: 5px 11px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: 0.18s;
+}
+
+.lastkill-btn:hover {
+    background: rgba(0, 224, 255, 0.20);
+    border-color: var(--cyan);
+}
+
+/* In the awaiting-kill state, highlight the card so it's obvious action is needed */
+.card.awaiting-kill {
+    border-color: rgba(0, 224, 255, 0.30);
+}
+.card.awaiting-kill .countdown {
+    color: var(--text-mute);
 }
 
 .drop-item {
@@ -1185,6 +1257,102 @@ const bosses = [
             { ico: "🍀", text: "Talisman of Luck" },
             { ico: "🧩", text: "Talisman of Assembly" }
         ]
+    },
+    {
+        name: "LUNAR RABBIT",
+        map: "Lorencia",
+        activeMin: 10,
+        times: ["01:30","04:15","07:00","09:45","12:30","15:15","18:15","21:00","23:45"],
+        details: [
+            { ico: "👹", text: "50 Mobs" },
+            { ico: "💰", text: "1 Hunt Point por Mob" },
+            { ico: "🍀", text: "50% Lucky Coin" },
+            { ico: "🌸", text: "50% Cherry Blossom Box" }
+        ]
+    },
+    {
+        name: "FIRE FLAME GHOST",
+        map: "Devias",
+        activeMin: 10,
+        times: ["01:45","04:30","07:15","10:00","12:45","15:30","18:30","21:15","23:00"],
+        details: [
+            { ico: "👹", text: "50 Mobs" },
+            { ico: "💰", text: "1 Hunt Point por Mob" },
+            { ico: "🍀", text: "50% Lucky Coin" },
+            { ico: "🌸", text: "50% Cherry Blossom Box" }
+        ]
+    },
+    {
+        name: "POUCH OF BLESSING",
+        map: "Noria",
+        activeMin: 10,
+        times: ["02:00","04:45","07:30","10:15","13:00","15:45","18:45","21:30","23:30"],
+        details: [
+            { ico: "👹", text: "50 Mobs" },
+            { ico: "💰", text: "1 Hunt Point por Mob" },
+            { ico: "🍀", text: "50% Lucky Coin" },
+            { ico: "🌸", text: "50% Cherry Blossom Box" }
+        ]
+    },
+    {
+        name: "MEDUSA",
+        map: "Swamp of Peace",
+        activeMin: 10,
+        times: ["22:45"],
+        weekdays: [2, 5],
+        details: [
+            { ico: "📅", text: "Terça e Sexta às 22:45" },
+            { ico: "👹", text: "2 Mobs · 25 Hunt Coin/mob" },
+            { ico: "🎴", text: "Chaos Card Rare" },
+            { ico: "🌟", text: "10% Chaos Card Gold" }
+        ]
+    },
+    {
+        name: "BALGASS",
+        map: "Crywolf",
+        activeMin: 10,
+        times: ["22:45"],
+        weekdays: [0],
+        details: [
+            { ico: "📅", text: "Apenas Domingos às 22:45" },
+            { ico: "👹", text: "1 Mob · 50 Hunt Coin" },
+            { ico: "🌟", text: "3x Chaos Card Gold" }
+        ]
+    },
+    {
+        name: "KUNDUN",
+        map: "Kalima 7",
+        activeMin: 10,
+        respawnHours: 12,
+        details: [
+            { ico: "⏳", text: "Respawn: 12h após morte" },
+            { ico: "👹", text: "1 Mob · 25 Hunt Coin" },
+            { ico: "💎", text: "2x Item Ancient Aleatório" }
+        ]
+    },
+    {
+        name: "NIGHTMARE",
+        map: "Kanturu",
+        activeMin: 10,
+        respawnHours: 24,
+        details: [
+            { ico: "⏳", text: "Respawn: 24h após morte" },
+            { ico: "👹", text: "1 Mob" },
+            { ico: "🎴", text: "Chaos Card Rare" },
+            { ico: "🌟", text: "10% Chaos Card Gold" }
+        ]
+    },
+    {
+        name: "SELUPAN",
+        map: "Raklion",
+        activeMin: 10,
+        respawnHours: 24,
+        details: [
+            { ico: "⏳", text: "Respawn: 24h após morte" },
+            { ico: "👹", text: "1 Mob · 25 Hunt Coin" },
+            { ico: "🎴", text: "Chaos Card Rare" },
+            { ico: "🌟", text: "10% Chaos Card Gold" }
+        ]
     }
 ];
 
@@ -1192,10 +1360,10 @@ const gameEvents = [
     {
         name: "Blood Castle",
         map: "Evento",
-        duration: 20,
+        duration: 15,
         times: ["01:55","03:55","05:55","07:55","09:55","11:55","13:55","15:55","17:55","19:55","21:55","23:55"],
         details: [
-            { ico: "⏱", text: "Duração: 20 minutos" },
+            { ico: "⏱", text: "Duração: 15 minutos" },
             { ico: "🩸", text: "Resgatar o arma sagrada" },
             { ico: "💰", text: "Jewels + EXP bônus" }
         ]
@@ -1203,12 +1371,37 @@ const gameEvents = [
     {
         name: "Devil Square",
         map: "Evento",
-        duration: 25,
+        duration: 20,
         times: ["00:25","02:25","04:25","06:25","08:25","10:25","12:25","14:25","16:25","18:25","20:25","22:25"],
         details: [
-            { ico: "⏱", text: "Duração: 25 minutos" },
+            { ico: "⏱", text: "Duração: 20 minutos" },
             { ico: "👹", text: "Ondas de monstros" },
             { ico: "💰", text: "Jewels + Box of Luck" }
+        ]
+    },
+    {
+        name: "Chaos Castle",
+        map: "Evento",
+        duration: 10,
+        times: ["00:55","02:55","04:55","06:55","08:55","10:55","12:55","14:55","16:55","18:55","20:55","22:55"],
+        details: [
+            { ico: "⏱", text: "Duração: 10 minutos" },
+            { ico: "🃏", text: "Chaos 1~6: 1 Jewel of Chaos" },
+            { ico: "💎", text: "Chaos 7: Item Ancient Aleatório" }
+        ]
+    },
+    {
+        name: "Pandora",
+        map: "Devias 3",
+        duration: 10,
+        offsetMin: 0,
+        times: ["00:50","02:50","04:50","06:50","08:50","10:50","12:50","14:50","16:50","18:50","20:50","22:50"],
+        details: [
+            { ico: "⏱", text: "20 min após início do Devil Square" },
+            { ico: "⚔️", text: "PvP ativo — sobreviva até o fim" },
+            { ico: "📦", text: "Box of Kundun +1~+5" },
+            { ico: "📦", text: "Sealed Box / Chaos Box" },
+            { ico: "💰", text: "25kk Zen" }
         ]
     }
 ];
@@ -1230,6 +1423,12 @@ const defaults = {
 };
 
 const settings = Object.assign({}, defaults, JSON.parse(localStorage.getItem('norton-settings') || '{}'));
+
+// Per-card collapsed state (persisted). Default is expanded — set holds the exceptions.
+const collapsedCards = new Set(JSON.parse(localStorage.getItem('norton-collapsed') || '[]'));
+function saveCollapsed() {
+    localStorage.setItem('norton-collapsed', JSON.stringify([...collapsedCards]));
+}
 
 function saveSettings() {
     localStorage.setItem('norton-settings', JSON.stringify(settings));
@@ -1255,71 +1454,128 @@ function timeToToday(t) {
     return d;
 }
 
-// Invasion (boss) spawns land 1 min AFTER the listed schedule beat — listed values
-// are the warning chime, actual spawn happens on the following minute.
-// Events (Blood Castle, Devil Square, etc.) start on the listed time exactly.
-const INVASION_OFFSET_MS = 60 * 1000;
+// Invasions: actual spawn lands 1 min after the listed schedule beat.
+// Events: actual start lands 5 min after the listed beat (Blood Castle 01:55 -> 02:00 etc.).
+// Items can override with `offsetMin: N` when their listed time already IS the actual time
+// (e.g. Pandora, where times are derived from Devil Square's actual start).
+// All thresholds (alert windows, yellow "Em Breve" state, AO VIVO transition) are computed
+// from the corrected times so alerts fire relative to actual spawn, not the listed value.
+const INVASION_OFFSET_MS = 1 * 60 * 1000;
+const EVENT_OFFSET_MS = 5 * 60 * 1000;
 function offsetMsFor(item) {
-    return item.kind === KIND_BOSS ? INVASION_OFFSET_MS : 0;
+    if (item.offsetMin !== undefined) return item.offsetMin * 60 * 1000;
+    return item.kind === KIND_BOSS ? INVASION_OFFSET_MS : EVENT_OFFSET_MS;
 }
 function spawnAt(t, offsetMs) {
     return new Date(timeToToday(t).getTime() + offsetMs);
 }
 
-function getSchedule(item) {
-    const now = new Date();
-    const offset = offsetMsFor(item);
-    let nextDate = null;
-    let nextTime = null;
-    let prevDate = null;
-    let prevTime = null;
+// Last-kill timestamps for respawn-after-kill bosses (per item.name -> ISO string)
+const lastKills = JSON.parse(localStorage.getItem('norton-lastkills') || '{}');
+function saveLastKills() {
+    localStorage.setItem('norton-lastkills', JSON.stringify(lastKills));
+}
 
-    item.times.forEach(t => {
-        const d = spawnAt(t, offset);
-        if (d > now) {
-            if (!nextDate || d < nextDate) {
+// Helper: build a Date for a time string on a specific day offset from today.
+function spawnOnDay(t, offsetMs, dayOffset) {
+    const [h, m] = t.split(':');
+    const d = new Date();
+    d.setDate(d.getDate() + dayOffset);
+    d.setHours(+h, +m, 0, 0);
+    return new Date(d.getTime() + offsetMs);
+}
+
+// Search the next/prev fixed-schedule beat respecting an optional weekdays whitelist.
+// weekdays: array of day numbers (0=Sun..6=Sat). If absent, every day counts.
+function findNextPrev(item) {
+    const offset = offsetMsFor(item);
+    const now = new Date();
+    const weekdays = item.weekdays || null;
+    const sorted = [...item.times].sort();
+
+    let nextDate = null, nextTime = null;
+    let prevDate = null, prevTime = null;
+
+    // Search forward up to 14 days for the next valid beat.
+    for (let dayOffset = 0; dayOffset <= 14 && !nextDate; dayOffset++) {
+        const probe = new Date(now);
+        probe.setDate(probe.getDate() + dayOffset);
+        if (weekdays && !weekdays.includes(probe.getDay())) continue;
+        for (const t of sorted) {
+            const d = spawnOnDay(t, offset, dayOffset);
+            if (d > now) {
                 nextDate = d;
                 nextTime = t;
-            }
-        } else {
-            if (!prevDate || d > prevDate) {
-                prevDate = d;
-                prevTime = t;
+                break;
             }
         }
-    });
-
-    // If everything is in the past today, next is tomorrow's earliest
-    if (!nextDate) {
-        const sorted = [...item.times].sort();
-        const first = sorted[0];
-        nextTime = first;
-        nextDate = spawnAt(first, offset);
-        nextDate.setDate(nextDate.getDate() + 1);
     }
 
-    // If nothing has happened yet today, prev is yesterday's latest
-    if (!prevDate) {
-        const sorted = [...item.times].sort();
-        const last = sorted[sorted.length - 1];
-        prevTime = last;
-        prevDate = spawnAt(last, offset);
-        prevDate.setDate(prevDate.getDate() - 1);
+    // Search backward up to 14 days for the previous valid beat.
+    for (let dayOffset = 0; dayOffset >= -14 && !prevDate; dayOffset--) {
+        const probe = new Date(now);
+        probe.setDate(probe.getDate() + dayOffset);
+        if (weekdays && !weekdays.includes(probe.getDay())) continue;
+        for (let i = sorted.length - 1; i >= 0; i--) {
+            const t = sorted[i];
+            const d = spawnOnDay(t, offset, dayOffset);
+            if (d <= now) {
+                prevDate = d;
+                prevTime = t;
+                break;
+            }
+        }
     }
 
     return { nextDate, nextTime, prevDate, prevTime };
 }
 
+function getSchedule(item) {
+    // Respawn-after-kill bosses: next spawn = lastKill + respawnHours.
+    if (item.respawnHours) {
+        const iso = lastKills[item.name];
+        if (!iso) {
+            return { nextDate: null, nextTime: null, prevDate: null, prevTime: null, needsLastKill: true };
+        }
+        const lastKill = new Date(iso);
+        const nextDate = new Date(lastKill.getTime() + item.respawnHours * 3600000);
+        const nextTime = pad(nextDate.getHours()) + ':' + pad(nextDate.getMinutes());
+        return { nextDate, nextTime, prevDate: lastKill, prevTime: 'morte registrada' };
+    }
+    return findNextPrev(item);
+}
+
 function getActive(item) {
     // Active = currently inside a spawn window (duration for events, activeMin for bosses)
     const dur = item.duration || item.activeMin || 5;
-    const offset = offsetMsFor(item);
     const now = new Date();
-    for (const t of item.times) {
-        const start = spawnAt(t, offset);
+
+    // Respawn-after-kill: active iff now is inside [nextSpawn, nextSpawn + dur].
+    if (item.respawnHours) {
+        const iso = lastKills[item.name];
+        if (!iso) return null;
+        const start = new Date(new Date(iso).getTime() + item.respawnHours * 3600000);
         const end = new Date(start.getTime() + dur * 60000);
         if (now >= start && now < end) {
-            return { start, end, time: t, remainingMs: end - now, durationMs: dur * 60000 };
+            return { start, end, time: pad(start.getHours()) + ':' + pad(start.getMinutes()),
+                     remainingMs: end - now, durationMs: dur * 60000 };
+        }
+        return null;
+    }
+
+    const offset = offsetMsFor(item);
+    const weekdays = item.weekdays || null;
+    // Check today and yesterday windows (a window starting yesterday could still be active)
+    for (let dayOffset = -1; dayOffset <= 0; dayOffset++) {
+        const probe = new Date(now);
+        probe.setDate(probe.getDate() + dayOffset);
+        if (weekdays && !weekdays.includes(probe.getDay())) continue;
+        for (const t of item.times) {
+            const start = spawnOnDay(t, offset, dayOffset);
+            const end = new Date(start.getTime() + dur * 60000);
+            if (now >= start && now < end) {
+                return { start, end, time: t, remainingMs: end - now, durationMs: dur * 60000 };
+            }
         }
     }
     return null;
@@ -1329,8 +1585,12 @@ function computeState(item) {
     const now = new Date();
     const sch = getSchedule(item);
     const active = getActive(item);
+    // Respawn boss with no last-kill yet: no countdown, no progress.
+    if (!sch.nextDate) {
+        return { sch, active, msToNext: Infinity, progressPct: 0, awaitingLastKill: !!sch.needsLastKill };
+    }
     const msToNext = sch.nextDate - now;
-    const interval = sch.nextDate - sch.prevDate;
+    const interval = sch.prevDate ? sch.nextDate - sch.prevDate : 0;
     const progressPct = interval > 0
         ? Math.max(0, Math.min(100, ((now - sch.prevDate) / interval) * 100))
         : 0;
@@ -1402,6 +1662,8 @@ function notify(title, body) {
 /* ============ ALERTS CHECK ============ */
 function checkAlerts(item, state) {
     const { sch, active, msToNext } = state;
+    // Respawn boss with no last-kill registered yet: no next time, nothing to alert about.
+    if (!sch.nextDate) return;
     const baseKey = item.name + '_' + sch.nextDate.getTime();
 
     // 5 min warning — fires once when crossing 5min threshold
@@ -1473,7 +1735,21 @@ function checkAlerts(item, state) {
 function buildCard(item) {
     const card = document.createElement('div');
     card.className = 'card kind-' + item.kind;
+    if (item.respawnHours) card.classList.add('kind-respawn');
     card.dataset.key = item.name;
+    const scheduleSection = item.respawnHours
+        ? `
+        <div class="sec-label"><span>Última morte</span></div>
+        <div class="lastkill-row">
+            <div class="lastkill-display">--/-- --:--</div>
+            <button class="lastkill-btn" type="button">Marcar agora</button>
+        </div>`
+        : `
+        <div class="sec-label">
+            <span>Horários do dia</span>
+            <span class="sec-label-meta"></span>
+        </div>
+        <div class="schedule"></div>`;
     card.innerHTML = `
         <div class="card-head">
             <div class="card-title">
@@ -1494,11 +1770,7 @@ function buildCard(item) {
             </div>
         </div>
         <div class="progress"><div class="progress-bar"></div></div>
-        <div class="sec-label">
-            <span>Horários do dia</span>
-            <span class="sec-label-meta"></span>
-        </div>
-        <div class="schedule"></div>
+        ${scheduleSection}
         <div class="sec-label"><span>Recompensas & mobs</span></div>
         <div class="drops"></div>
     `;
@@ -1509,7 +1781,6 @@ function buildCard(item) {
     const kb = card.querySelector('.kind-badge');
     kb.classList.add(item.kind);
     kb.textContent = item.kind === KIND_BOSS ? 'INVASÃO' : 'EVENTO';
-    card.querySelector('.sec-label-meta').textContent = item.times.length + ' por dia';
     const dropsEl = card.querySelector('.drops');
     if (item.details && item.details.length) {
         dropsEl.innerHTML = item.details.map(d =>
@@ -1518,10 +1789,47 @@ function buildCard(item) {
     } else {
         dropsEl.innerHTML = '<div class="drop-item">Sem informações</div>';
     }
-    const schEl = card.querySelector('.schedule');
-    schEl.innerHTML = item.times.map(t =>
-        '<span class="tc" data-t="' + t + '">' + t + '</span>'
-    ).join('');
+
+    if (item.respawnHours) {
+        const btn = card.querySelector('.lastkill-btn');
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            lastKills[item.name] = new Date().toISOString();
+            saveLastKills();
+            // Force immediate re-render so the countdown updates without waiting 1s
+            render();
+        });
+        // Right-click on the button clears the last-kill (in case it was set by mistake)
+        btn.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            delete lastKills[item.name];
+            saveLastKills();
+            render();
+        });
+    } else {
+        const metaEl = card.querySelector('.sec-label-meta');
+        if (metaEl) metaEl.textContent = item.times.length + ' por dia';
+        const schEl = card.querySelector('.schedule');
+        schEl.innerHTML = item.times.map(t =>
+            '<span class="tc" data-t="' + t + '">' + t + '</span>'
+        ).join('');
+    }
+
+    // Restore collapsed state from prior session
+    if (collapsedCards.has(item.name)) card.classList.add('collapsed');
+
+    // Click anywhere on the card toggles collapse (active cards stay open via CSS)
+    card.addEventListener('click', () => {
+        if (collapsedCards.has(item.name)) {
+            collapsedCards.delete(item.name);
+            card.classList.remove('collapsed');
+        } else {
+            collapsedCards.add(item.name);
+            card.classList.add('collapsed');
+        }
+        saveCollapsed();
+    });
     return card;
 }
 
@@ -1552,19 +1860,26 @@ function updateCard(card, item, state) {
     // Status classes
     card.classList.toggle('active', status === 'active');
     card.classList.toggle('soon', status === 'soon');
+    card.classList.toggle('awaiting-kill', !!state.awaitingLastKill);
 
     // Pill
     const pill = card.querySelector('.pill');
     pill.classList.remove('active', 'soon');
     if (status !== 'wait') pill.classList.add(status);
-    card.querySelector('.pill-text').textContent = statusLabel(status);
-    card.querySelector('.pulse').style.display = status === 'wait' ? 'none' : 'inline-block';
+    card.querySelector('.pill-text').textContent = state.awaitingLastKill
+        ? 'Sem morte'
+        : statusLabel(status);
+    card.querySelector('.pulse').style.display = (status === 'wait' || state.awaitingLastKill) ? 'none' : 'inline-block';
 
     // Countdown text
     const cd = card.querySelector('.countdown');
     const cdLabel = card.querySelector('.countdown-info-label');
     const cdValue = card.querySelector('.countdown-info-value');
-    if (state.active) {
+    if (state.awaitingLastKill) {
+        cd.textContent = '--:--:--';
+        cdLabel.textContent = 'Aguardando';
+        cdValue.textContent = 'morte';
+    } else if (state.active) {
         cd.textContent = fmtHMS(state.active.remainingMs);
         cdLabel.textContent = 'Termina às';
         cdValue.textContent = pad(state.active.end.getHours()) + ':' + pad(state.active.end.getMinutes());
@@ -1577,22 +1892,36 @@ function updateCard(card, item, state) {
     // Progress
     const bar = card.querySelector('.progress-bar');
     if (state.active) {
-        // active animation handles via CSS
         bar.style.width = '100%';
     } else {
         bar.style.width = state.progressPct.toFixed(2) + '%';
     }
 
-    // Schedule chips state
+    // Respawn boss: refresh the "last kill" display
+    if (item.respawnHours) {
+        const lk = card.querySelector('.lastkill-display');
+        if (lk) {
+            const iso = lastKills[item.name];
+            if (iso) {
+                const d = new Date(iso);
+                lk.textContent = pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + ' ' +
+                                 pad(d.getHours()) + ':' + pad(d.getMinutes());
+            } else {
+                lk.textContent = 'Nenhuma morte registrada';
+            }
+        }
+        return; // No schedule chips for respawn bosses
+    }
+
+    // Schedule chips state (fixed-schedule items only)
     const now = new Date();
-    const currentMin = pad(now.getHours()) + ':' + pad(now.getMinutes());
     const chipOffset = offsetMsFor(item);
     card.querySelectorAll('.tc').forEach(chip => {
         const t = chip.dataset.t;
         const td = spawnAt(t, chipOffset);
         const isPast = td <= now;
-        const isNext = t === state.sch.nextTime && state.sch.nextDate.toDateString() === new Date().toDateString();
-        // "current" if the active window started at this time
+        const isNext = state.sch.nextDate && t === state.sch.nextTime
+                       && state.sch.nextDate.toDateString() === new Date().toDateString();
         const isCurrent = state.active && state.active.time === t;
         chip.classList.toggle('past', isPast && !isCurrent && !isNext);
         chip.classList.toggle('next', isNext && !isCurrent);
@@ -1625,8 +1954,8 @@ function render() {
         return a.state.msToNext - b.state.msToNext;
     };
 
-    // Banner: next event across all categories
-    const sortedAll = [...allComputed].sort(sortByUrgency);
+    // Banner: next event across all categories (skip items with no schedule yet)
+    const sortedAll = [...allComputed].filter(c => c.state.active || c.state.sch.nextDate).sort(sortByUrgency);
     if (sortedAll.length) {
         const top = sortedAll[0];
         document.getElementById('nextName').textContent = top.item.name;
