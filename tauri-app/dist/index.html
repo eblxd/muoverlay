@@ -1951,6 +1951,12 @@ function render() {
         if (a.state.active && !b.state.active) return -1;
         if (!a.state.active && b.state.active) return 1;
         if (a.state.active && b.state.active) return a.state.active.remainingMs - b.state.active.remainingMs;
+        // Respawn bosses without a registered kill have msToNext = Infinity.
+        // Infinity - Infinity = NaN which breaks Array.sort -> cards shuffle every render.
+        const aFinite = isFinite(a.state.msToNext);
+        const bFinite = isFinite(b.state.msToNext);
+        if (aFinite !== bFinite) return aFinite ? -1 : 1;
+        if (!aFinite) return a.item.name.localeCompare(b.item.name);
         return a.state.msToNext - b.state.msToNext;
     };
 
