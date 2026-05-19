@@ -125,16 +125,14 @@ async fn check_for_updates(handle: AppHandle) {
         Ok(Some(u)) => u,
         _ => return,
     };
-    if update
+    // Just download + queue the install. Do NOT call handle.restart() — it relaunches
+    // the still-running OLD binary before NSIS can replace the .exe on disk, which kicks
+    // off an infinite update loop (old version → finds same update → installs → restart →
+    // old version starts again because file swap failed → repeat). The NSIS installer
+    // will run when the user manually closes the app; next open is the new version.
+    let _ = update
         .download_and_install(|_chunk, _total| {}, || {})
-        .await
-        .is_ok()
-    {
-        // On Windows the NSIS installer kills + relaunches us automatically, but
-        // restart() guarantees the swap if it doesn't (and is a no-op on macOS/Linux
-        // tarball updates that just rewrite the binary in place).
-        handle.restart();
-    }
+        .await;
 }
 
 fn main() {
